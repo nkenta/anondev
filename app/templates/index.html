@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% block title %}Anonymisation Reports | Anonymiser{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm p-4 mb-4">
+                <h2 class="text-center mb-3" style="font-weight:700">Anonymise Your Lived Experience</h2>
+                <p class="mt-2 text-muted text-center mx-auto" style="max-width: 500px; font-size: 14px;">
+                    Remove personal details from lived experience reports. Choose your anonymisation
+                    level and model to protect identities while keeping your story authentic.
+                </p>
+                <form id="anonymise-form" method="POST" enctype="multipart/form-data" autocomplete="off">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3 row g-2 align-items-center">
+                        <div class="col-12 col-md-7">
+                            <label for="file" class="form-label">Upload File (.txt, .docx, .pdf)</label>
+                            {{ form.file(class="form-control", id="file-upload") }}
+                        </div>
+                        <div class="col-12 col-md-5 d-flex align-items-end justify-content-md-end">
+                            <button type="button" id="clear-text" class="btn btn-outline-secondary ms-0 w-80 mt-4 md-4">
+                                <span class="material-icons align-middle">clear</span> Clear Text
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="inputText" class="form-label">Paste Text</label>
+                        {{ form.text(class="form-control", id="input-text", rows="7", style="font-size:1rem;min-height:150px;max-height:340px;") }}
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label for="level" class="form-label">Anonymisation Level</label>
+                            {{ form.level(class="form-select", id="level-select") }}
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="model" class="form-label">Model</label>
+                            {{ form.model(class="form-select", id="model-select") }}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-1 gap-3">
+                        <button type="submit" class="btn btn-primary px-4 bouncy-btn" id="anonymise-btn">
+                            <span class="material-icons align-middle">auto_fix_high</span> Anonymise
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="output-section" class="card shadow-sm p-4 mb-4" style="display: {% if anonymised_text %}block{% else %}none{% endif %};">
+                <h4 class="mb-2">Anonymised Output</h4>
+                <div class="card card-body bg-light mb-2" style="min-height:120px;max-height:340px;overflow-y:auto;font-size:1.1rem;">
+                    <pre class="mb-0" id="output-text" style="white-space: pre-wrap;">{{ anonymised_text }}</pre>
+                </div>
+                <!-- Save actions: Only rendered/visible if user can save and not guest -->
+                <div id="save-actions"
+                    class="text-center mt-3"
+                    style="{% if not (can_save and not is_guest) %}display:none;{% endif %}">
+                    <button id="save-report-btn" class="btn btn-success px-4 mb-2">
+                        <span class="material-icons align-middle">save</span> Save this report
+                    </button>
+                </div>
+                <div id="download-links" class="text-center mt-2"></div>
+                <div id="save-status" style="display:none;"></div>
+            </div>
+
+            <!-- Guest Save Alert: Only shows if guest, spaCy, and output exists -->
+            <div id="guest-save-alert" class="alert alert-info text-center mb-4"
+                style="display: {% if anonymised_text and model_used == 'spacy' and is_guest %}block{% else %}none{% endif %};">
+                <strong>Want a copy of this report?</strong><br>
+                <a href="{{ url_for('main.login') }}" class="btn btn-sm btn-primary mt-2 mx-1">Log In</a>
+                <a href="{{ url_for('main.register') }}" class="btn btn-sm btn-outline-primary mt-2 mx-1">Create Account</a>
+                <div class="small text-muted mt-2">
+                    To save your reports, download as PDF or text, and view your history.
+                </div>
+            </div>
+
+            <!-- Overlay Spinner -->
+            <div id="overlay-spinner" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2000;background:rgba(255,255,255,0.75);justify-content:center;align-items:center;">
+                <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;">
+                  <span class="visually-hidden">Processing...</span>
+                </div>
+            </div>
+
+            <!-- Toast -->
+            <div class="position-fixed top-0 end-0 p-3" style="z-index:3000;">
+                <div id="main-toast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3200">
+                    <div class="d-flex">
+                        <div class="toast-body" id="toast-message"></div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Expose guest flag to JS for client-side defense
+window.is_guest_user = {{ 'true' if is_guest else 'false' }};
+
+// --- UI helpers ---
+function showSpinner(show) {
+    const overlay = document.getElementById("overlay-spinner");
+    overlay.style.display = show ? "flex" : "none";
+}
+function showToast(msg, style="primary") {
+    let toast = document.getElementById("main-toast");
+    let toastMsg = document.getElementById("toast-message");
+    toast.className = `toast align-items-center text-bg-${style} border-0`;
+    toastMsg.innerText = msg;
+    let bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+}
+function setSaveStatus(message, type) {
+    let el = document.getElementById("save-status");
+    el.className = `alert alert-${type} mt-3`;
+    el.innerText = message;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+// --- Main logic ---
+document.addEventListener("DOMContentLoaded", function() {
+    // Clear text and output
+    document.getElementById("clear-text").addEventListener("click", function(e){
+        e.preventDefault();
+        document.getElementById("input-text").value = "";
+        document.getElementById("file-upload").value = "";
+        document.getElementById("output-section").style.display = "none";
+        document.getElementById("output-text").innerText = "";
+        let guestAlert = document.getElementById("guest-save-alert");
+        if (guestAlert) guestAlert.style.display = "none";
+        document.getElementById("download-links").innerHTML = "";
+        let saveBtn = document.getElementById("save-report-btn");
+        if (saveBtn) saveBtn.style.display = "inline-block";
+    });
+
+    // File-to-text extraction
+    document.getElementById("file-upload").addEventListener("change", function(e){
+        const fileInput = e.target;
+        const file = fileInput.files[0];
+        if(!file) return;
+        let formData = new FormData();
+        formData.append("file", file);
+        fetch("/extract", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("input-text").value = data.text;
+        });
+    });
+
+    // Save Report AJAX (defensive: don't allow guest)
+    document.addEventListener("click", function(e){
+        if (e.target && e.target.id === "save-report-btn") {
+            e.preventDefault();
+            if (window.is_guest_user) {
+                showToast("Please log in to save reports.", "warning");
+                return;
+            }
+            let btn = e.target;
+            btn.disabled = true;
+            showSpinner(true);
+            fetch("/save-report", {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: new URLSearchParams({
+                    input_text: document.getElementById("input-text").value,
+                    anonymised_text: document.getElementById("output-text").innerText,
+                    level: document.getElementById("level-select").value,
+                    model_used: document.getElementById("model-select").value,
+                    filename: document.getElementById("file-upload").files[0]?.name || ""
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                showSpinner(false);
+                if(data.success) {
+                    showToast("Report saved!", "success");
+                    setSaveStatus("Report saved successfully!", "success");
+                    if (data.history_id) {
+                        document.getElementById("download-links").innerHTML = `
+                        <div class="mt-3">
+                            <a href="/download/${data.history_id}/pdf" class="btn btn-outline-dark btn-sm mx-1" download>
+                                <span class="material-icons align-middle">picture_as_pdf</span> PDF
+                            </a>
+                            <a href="/download/${data.history_id}/docx" class="btn btn-outline-primary btn-sm mx-1" download>
+                                <span class="material-icons align-middle">description</span> DOCX
+                            </a>
+                            <a href="/download/${data.history_id}/txt" class="btn btn-outline-secondary btn-sm mx-1" download>
+                                <span class="material-icons align-middle">text_snippet</span> TXT
+                            </a>
+                        </div>`;
+                        document.getElementById("save-report-btn").style.display = "none";
+                    }
+                } else {
+                    showToast(data.msg || "Failed to save report.", "danger");
+                    setSaveStatus(data.msg || "Failed to save report.", "danger");
+                    btn.disabled = false;
+                }
+            })
+            .catch(() => {
+                showSpinner(false);
+                showToast("Error saving report.", "danger");
+                setSaveStatus("Error saving report.", "danger");
+                e.target.disabled = false;
+            });
+        }
+    });
+
+    // Anonymise AJAX (core UI/UX, guest/save logic)
+    document.getElementById("anonymise-form").addEventListener("submit", function(e){
+        e.preventDefault();
+        let form = e.target;
+        let formData = new FormData(form);
+        showSpinner(true);
+        fetch("/", {
+            method: "POST",
+            body: formData,
+            headers: {"X-Requested-With": "XMLHttpRequest"}
+        })
+        .then(response => response.json())
+        .then(data => {
+            showSpinner(false);
+            document.getElementById("output-section").style.display = "block";
+            document.getElementById("output-text").innerText = data.anonymised_text || "";
+            document.getElementById("download-links").innerHTML = "";
+            let guestAlert = document.getElementById("guest-save-alert");
+            if (data.anonymised_text && data.model_used === "spacy" && data.is_guest) {
+                if (!guestAlert) {
+                    let alertDiv = document.createElement("div");
+                    alertDiv.className = "alert alert-info text-center mb-4";
+                    alertDiv.id = "guest-save-alert";
+                    alertDiv.innerHTML =
+                        `<strong>Want a copy of this report?</strong><br>
+                        <a href="/login" class="btn btn-sm btn-primary mt-2 mx-1">Log In</a>
+                        <a href="/register" class="btn btn-sm btn-outline-primary mt-2 mx-1">Create Account</a>
+                        <div class="small text-muted mt-2">
+                            To save your reports, download as PDF or text, and view your history.
+                        </div>`;
+                    document.querySelector('.col-lg-8 .card:last-of-type').after(alertDiv);
+                } else {
+                    guestAlert.style.display = "block";
+                }
+            } else {
+                if (guestAlert) guestAlert.style.display = "none";
+            }
+            // Show/hide Save Report button
+            let saveActions = document.getElementById("save-actions");
+            if (saveActions) saveActions.style.display = "none";
+            if (data.can_save && !data.is_guest) {
+                if (!saveActions) {
+                    let div = document.createElement("div");
+                    div.className = "text-center mt-3";
+                    div.id = "save-actions";
+                    div.innerHTML = `<button id="save-report-btn" class="btn btn-success px-4 mb-2">
+                        <span class="material-icons align-middle">save</span> Save this report
+                    </button>`;
+                    document.getElementById("output-section").appendChild(div);
+                } else {
+                    saveActions.style.display = "block";
+                    let btn = document.getElementById("save-report-btn");
+                    if (btn) btn.style.display = "inline-block";
+                }
+            }
+        })
+        .catch(() => {
+            showSpinner(false);
+            showToast("Anonymisation failed.", "danger");
+        });
+    });
+
+    // On page load, re-show save if needed
+    {% if can_save and not is_guest %}
+    let saveActions = document.getElementById("save-actions");
+    if (saveActions) saveActions.style.display = "block";
+    {% endif %}
+});
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Anonymised Report | Anonymiser{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card p-4 shadow-sm mb-3">
+      <h2 class="mb-3 text-center">Anonymised Report</h2>
+      <div class="mb-3">
+        <span class="badge rounded-pill bg-info">{{ history.anonymisation_level|capitalize }}</span>
+        <span class="badge rounded-pill bg-secondary">{{ history.model_used|upper }}</span>
+        <span class="text-muted small ms-2">{{ history.timestamp.strftime('%d %b %Y %H:%M') }}</span>
+      </div>
+      <h5>Original Input{% if history.input_filename %} ({{ history.input_filename }}){% endif %}</h5>
+      <div class="card card-body mb-3" style="background:#fafafa;">
+        <pre style="white-space: pre-wrap;">{{ history.input_text }}</pre>
+      </div>
+      <h5>Anonymised Output</h5>
+      <div class="card card-body" style="background:#eaf6f6;">
+        <pre style="white-space: pre-wrap;">{{ history.anonymised_text }}</pre>
+      </div>
+      <div class="d-flex mt-3 gap-2">
+        <a href="{{ url_for('main.download_anonymised', history_id=history.id, format='docx') }}" class="btn btn-outline-success bouncy-btn">
+          <span class="material-icons align-middle">download</span> Download DOCX
+        </a>
+        <a href="{{ url_for('main.download_anonymised', history_id=history.id, format='pdf') }}" class="btn btn-outline-primary bouncy-btn">
+          <span class="material-icons align-middle">picture_as_pdf</span> Download PDF
+        </a>
+        <button class="btn btn-outline-danger bouncy-btn ms-auto" onclick="confirmDelete({{ history.id }})">
+          <span class="material-icons align-middle">delete</span> Delete
+        </button>
+      </div>
+    </div>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-link">
+      <span class="material-icons align-middle">arrow_back</span> Back to History
+    </a>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function confirmDelete(historyId) {
+    if (confirm("Are you sure you want to delete this anonymised report? This cannot be undone.")) {
+        fetch(`/delete/${historyId}`, {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "{{ url_for('main.dashboard') }}";
+                }
+            });
+    }
+}
+</script>
+{% endblock %}

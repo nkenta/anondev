@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | Anonymiser{% endblock %}
+{% block content %}
+<h2 class="mb-4 text-center">Anonymised Report</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">All History</h4>
+  <a href="{{ url_for('main.index') }}" class="btn btn-success d-flex align-items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-lg me-1" viewBox="0 0 16 16">
+      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+    </svg>
+    Add New
+  </a>
+</div>
+
+{% if histories.items %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Model</th>
+          <th>Level</th>
+          <th>Input File</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in histories.items %}
+        <tr>
+          <td>{{ h.timestamp.strftime('%d %b %Y %H:%M') }}</td>
+          <td>{{ h.model_used|upper }}</td>
+          <td>{{ h.anonymisation_level|capitalize }}</td>
+          <td>{{ h.input_filename or 'Text/Paste' }}</td>
+          <td>
+            <a href="{{ url_for('main.view_history', history_id=h.id) }}" class="btn btn-outline-primary btn-sm bouncy-btn">
+              <span class="material-icons align-middle">open_in_new</span> View
+            </a>
+            <button class="btn btn-outline-danger btn-sm bouncy-btn" onclick="confirmDelete({{ h.id }})">
+              <span class="material-icons align-middle">delete</span> Delete
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <nav>
+    <ul class="pagination justify-content-center">
+      {% if histories.has_prev %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('main.dashboard', page=histories.prev_num) }}">Previous</a></li>
+      {% endif %}
+      {% if histories.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('main.dashboard', page=histories.next_num) }}">Next</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% else %}
+  <div class="alert alert-info">No reports yet.</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+function confirmDelete(historyId) {
+    if (confirm("Are you sure you want to delete this anonymised report? This cannot be undone.")) {
+        fetch(`/delete/${historyId}`, {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                }
+            });
+    }
+}
+</script>
+{% endblock %}
