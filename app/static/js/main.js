@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Descriptions for Anonymization Levels ---
     const levelDescriptions = {
         low: {
-            title: 'Level 1: Essential Privacy',
+            title: 'LOW: Essential Privacy',
             details: `Focuses on removing only the most direct personal identifiers. This level targets:
                 <ul>
                     <li><strong>Names</strong> of people (PERSON).</li>
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </ul>`
         },
         medium: {
-            title: 'Level 2: Balanced Privacy',
+            title: 'MEDIUM: Balanced Privacy',
             details: `Removes direct personal details and indirect contextual identifiers. This is the recommended level for most reports. This level targets:
                 <ul>
                     <li>Everything from Level 1, plus:</li>
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </ul>`
         },
         high: {
-            title: 'Level 3: Maximum Privacy',
+            title: 'HIGH: Maximum Privacy',
             details: `Performs the most aggressive anonymization, removing all personal, contextual, and temporal data that could be used to identify someone. This level targets:
                 <ul>
                     <li>Everything from Levels 1 and 2, plus:</li>
