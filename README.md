@@ -80,7 +80,7 @@ Make sure you have the following installed on your system:
 
 1.  **Clone the repository:**
     ```sh
-    git clone [https://github.com/your-username/anonymization_reports.git](https://github.com/your-username/anonymization_reports.git)
+    git clone [https://github.com/nkenta/anondev.git](https://github.com/nkenta/anondev.git)
     cd anonymization_reports
     ```
 
