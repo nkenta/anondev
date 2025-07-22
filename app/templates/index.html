@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Anonymization Reports{% endblock %}
+
+{% block content %}
+    <div class="landing-page">
+        <div class="hero">
+            <h2>Securely Anonymize Your Reports</h2>
+            <p>Protect identities in lived experience narratives with our powerful AI and rule-based anonymization tool.
+                Maintain the authenticity of your data while ensuring complete privacy.</p>
+            <a href="{{ url_for('main.anonymize_page') }}" class="btn btn-large btn-primary">
+                <span class="material-icons-outlined">rocket_launch</span>Get Started
+            </a>
+        </div>
+        <div class="features">
+            <div class="feature">
+                <span class="material-icons-outlined">smart_toy</span>
+                <h3>Dual Anonymization Models</h3>
+                <p>Choose between the precision of SpaCy's rule-based entity recognition or the contextual power of
+                    advanced AI models like ChatGPT.</p>
+            </div>
+            <div class="feature">
+                <span class="material-icons-outlined">tune</span>
+                <h3>Granular Control</h3>
+                <p>Select from different anonymization levels and interactively approve or customize every suggested
+                    change for perfect results.</p>
+            </div>
+            <div class="feature">
+                <span class="material-icons-outlined">history</span>
+                <h3>Persistent History</h3>
+                <p>Securely log in to access, review, and download all your past anonymized reports in various
+                    formats.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

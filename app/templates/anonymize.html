@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Anonymizer Tool{% endblock %}
+
+{% block content %}
+<div class="anonymizer-container">
+    <h2>Anonymizer Tool</h2>
+    <p>Paste your text, upload a file, and choose your model to begin.</p>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>1. Provide Your Report</h3>
+        </div>
+        <div class="card-body">
+            <div class="input-options">
+                <textarea id="original-text" placeholder="Paste your text here..."></textarea>
+                <div class="file-upload-wrapper">
+                    <label for="file-upload" class="file-upload-label">
+                        <span class="material-icons-outlined">upload_file</span>
+                        Upload a file (.txt, .pdf, .docx)
+                    </label>
+                    <input type="file" id="file-upload" accept=".txt,.pdf,.docx">
+                    <span id="file-name"></span>
+                </div>
+            </div>
+            <div class="input-actions">
+                <button id="clear-text-btn" class="btn btn-secondary"><span
+                        class="material-icons-outlined">delete_sweep</span>
+                    Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>2. Configure Anonymization</h3>
+        </div>
+        <div class="card-body config-grid">
+            <div class="config-item">
+                <label for="model-select">Model</label>
+                <select id="model-select">
+                    <option value="spacy">SpaCy (Interactive Control)</option>
+                    <option value="chatgpt">Advanced AI (Automated)</option>
+                </select>
+            </div>
+            <div class="config-item">
+                <label for="level-select">Anonymization Level</label>
+                <select id="level-select">
+                    <option value="low">Level 1: Essential Privacy</option>
+                    <option value="medium" selected>Level 2: Balanced Privacy (Recommended)</option>
+                    <option value="high">Level 3: Maximum Privacy</option>
+                </select>
+            </div>
+        </div>
+        <div id="level-description-box" class="card-body">
+            <h4>Level 2: Balanced Privacy</h4>
+            <p>Removes direct personal details and indirect contextual identifiers. This level targets:
+            <ul>
+                <li><strong>Names</strong> of people (PERSON).</li>
+                <li><strong>Ages</strong> of individuals (AGE).</li>
+                <li><strong>Organizations</strong> (e.g., companies, agencies, hospitals) (ORG).</li>
+                <li><strong>Specific Locations & Buildings</strong> (e.g., stadiums, specific clinics) (FAC, LOC).
+                </li>
+                <li><strong>Geopolitical Locations</strong> (e.g., cities, states, countries) (GPE).</li>
+            </ul>
+            </p>
+        </div>
+        <div class="card-footer">
+            <button id="start-btn" class="btn btn-primary">
+                <span class="material-icons-outlined">play_arrow</span>Start Anonymization
+            </button>
+        </div>
+    </div>
+
+    <div id="spacy-stepper" class="card hidden">
+        <div class="card-header">
+            <h3>3. Review & Customize Changes</h3>
+            <div class="progress-container">
+                <span id="progress-text"></span>
+                <div class="progress-bar-bg">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+        <div id="stepper-content" class="card-body">
+            </div>
+        <div class="card-footer stepper-nav">
+            <button id="prev-step-btn" class="btn btn-secondary">
+                <span class="material-icons-outlined">arrow_back</span>Previous
+            </button>
+            <button id="next-step-btn" class="btn btn-primary">
+                <span class="material-icons-outlined">arrow_forward</span>Next
+            </button>
+            <button id="finalize-btn" class="btn btn-success hidden">
+                <span class="material-icons-outlined">check_circle</span>Finalize Report
+            </button>
+        </div>
+    </div>
+
+    <div id="loading-spinner" class="loading-spinner hidden">
+        <div class="spinner"></div>
+        <p>AI is processing your report... please wait.</p>
+    </div>
+
+    <div id="output-section" class="card hidden">
+        <div class="card-header">
+            <div>
+                <h3>4. Anonymized Report</h3>
+                <p>Changes are <mark>highlighted</mark>. Review the output below.</p>
+            </div>
+            <div id="output-info-tags" class="info-tags"></div>
+        </div>
+        <div id="anonymized-output" class="card-body output-box">
+            </div>
+        <div class="card-footer output-actions">
+            <button id="save-report-btn" class="btn btn-success"><span class="material-icons-outlined">save</span>
+                Save to History
+            </button>
+            <div class="download-options">
+                <button id="download-pdf-btn" class="btn btn-secondary"><span
+                        class="material-icons-outlined">picture_as_pdf</span>
+                    Download PDF
+                </button>
+                <button id="download-docx-btn" class="btn btn-secondary"><span
+                        class="material-icons-outlined">article</span>
+                    Download DOCX
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="download-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h4>Download Options</h4>
+        <p>For fully formatted PDF/DOCX files, please save the report to your history first and download from there.</p>
+        <div class="modal-actions">
+            <button id="cancel-download" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

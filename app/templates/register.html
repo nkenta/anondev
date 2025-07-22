@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card">
+        <div class="card-header">
+            <h2>Create an Account</h2>
+        </div>
+        <form method="POST" action="{{ url_for('auth.register') }}" class="card-body">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="api_key">OpenAI API Key (Optional)</label>
+                <input type="text" id="api_key" name="api_key" placeholder="For using the advanced AI model">
+                <small>The Advanced AI model requires your own key.
+                    <a href="https://platform.openai.com/api-keys" target="_blank" class="helper-link">How do I get an API key?</a>
+                </small>
+                <small>You can also add or update this later in your profile.</small>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Register</button>
+        </form>
+        <div class="card-footer">
+            <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

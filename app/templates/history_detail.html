@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Report Details{% endblock %}
+
+{% block content %}
+<div class="history-detail-container">
+    <a href="{{ url_for('main.history') }}" class="back-link">
+        <span class="material-icons-outlined">arrow_back</span> Back to History
+    </a>
+    
+    <h2>Report from {{ report.timestamp.strftime('%B %d, %Y') }}</h2>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Anonymized Report (with highlights)</h3>
+            <div class="download-options">
+                 <a href="{{ url_for('main.download_report', report_id=report.id, file_format='pdf', highlight='true') }}" class="btn btn-secondary">
+                    <span class="material-icons-outlined">picture_as_pdf</span> PDF
+                </a>
+                 <a href="{{ url_for('main.download_report', report_id=report.id, file_format='docx', highlight='true') }}" class="btn btn-secondary">
+                    <span class="material-icons-outlined">article</span> DOCX
+                </a>
+            </div>
+        </div>
+        <div class="card-body output-box">
+            {{ report.anonymized_text_highlighted|safe }}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Anonymized Report (clean text)</h3>
+            <div class="download-options">
+                 <a href="{{ url_for('main.download_report', report_id=report.id, file_format='pdf', highlight='false') }}" class="btn btn-secondary">
+                    <span class="material-icons-outlined">picture_as_pdf</span> PDF
+                </a>
+                 <a href="{{ url_for('main.download_report', report_id=report.id, file_format='docx', highlight='false') }}" class="btn btn-secondary">
+                    <span class="material-icons-outlined">article</span> DOCX
+                </a>
+            </div>
+        </div>
+        <div class="card-body output-box">
+            {{ report.anonymized_text_clean }}
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>Original Report</h3>
+        </div>
+        <div class="card-body output-box">
+            {{ report.original_text }}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

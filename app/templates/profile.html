@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Your Profile{% endblock %}
+
+{% block content %}
+    <div class="profile-container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Profile and Security</h2>
+            </div>
+            <form method="POST" action="{{ url_for('auth.profile') }}" class="card-body">
+
+                <h4>Account Information</h4>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" value="{{ user.username }}" disabled>
+                    <small>Your username cannot be changed.</small>
+                </div>
+
+                <hr class="form-divider">
+
+                <h4>API Key Settings</h4>
+                <div class="form-group">
+                    <label for="api_key">Your OpenAI API Key</label>
+                    <input type="text" id="api_key" name="api_key" value="{{ user.openai_api_key or '' }}"
+                           placeholder="sk-...">
+                    <small>The Advanced AI model requires your own key.
+                        <a href="https://platform.openai.com/api-keys" target="_blank" class="helper-link">How do I get
+                            an API key?</a>
+                    </small>
+                </div>
+
+                <hr class="form-divider">
+
+                <h4>Change Password</h4>
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password" minlength="8"
+                           placeholder="Leave blank to keep current password">
+                    <small>Password must be at least 8 characters long.</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_new_password">Confirm New Password</label>
+                    <input type="password" id="confirm_new_password" name="confirm_new_password"
+                           placeholder="Confirm your new password">
+                </div>
+                <div class="form-group">
+                    <label for="current_password">Current Password (required to make changes)</label>
+                    <input type="password" id="current_password" name="current_password" required>
+                    <small>For your security, you must provide your current password to save any changes.</small>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-icons-outlined">save</span>Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
